@@ -1,11 +1,9 @@
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import { Mail, Phone, Instagram, Linkedin, X } from "lucide-react";
+import { Mail, Instagram, Linkedin, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { VisibilityVideo } from "./components/VisibilityVideo";
 import {
   InstagramProfileSection,
-  type InstagramHighlight,
-  type InstagramHighlightStory,
   type InstagramPost,
 } from "./components/InstagramProfileSection";
 
@@ -53,12 +51,6 @@ const fadeInUp: Variants = {
   }
 };
 
-const storyVariants: Variants = {
-  enter: (dir: 1 | -1) => ({ opacity: 0, y: dir > 0 ? 36 : -36 }),
-  center: { opacity: 1, y: 0 },
-  exit: (dir: 1 | -1) => ({ opacity: 0, y: dir > 0 ? -36 : 36 }),
-};
-
 const instagramPosts: InstagramPost[] = [
   {
     id: "juniorgp-trackside",
@@ -97,107 +89,6 @@ const instagramPosts: InstagramPost[] = [
     coverUrl: "/covers/auc.jpg",
   },
 ];
-
-const highlightMediaFilenames = [
-  "_DSF6189.jpeg",
-  "_DSF6320.jpeg",
-  "1e2c8688-3f3e-4f34-96f6-fb59ade25b9c.jpg",
-  "26062022-012.JPEG",
-  "7bfe83d8-cf90-4830-a02c-30ae22a9bfed.jpg",
-  "84cb92bd-7585-4c71-ae1f-4bbe4ce0b755.jpg",
-  "98899E3D-D48E-47D5-93E9-E1DFD5F3DB28.jpg",
-  "C3_01011.jpeg",
-  "IMG_0106.JPEG",
-  "IMG_0106.MOV",
-  "IMG_0146.JPEG",
-  "IMG_0153.JPEG",
-  "IMG_0226.JPEG",
-  "IMG_0226.MOV",
-  "IMG_0436.JPEG",
-  "IMG_0437.JPEG",
-  "IMG_0445.JPEG",
-  "IMG_0445.MOV",
-  "IMG_0475.JPEG",
-  "IMG_0475.MOV",
-  "IMG_0513.JPEG",
-  "IMG_0526.JPEG",
-  "IMG_0526.MOV",
-  "IMG_0648.JPEG",
-  "IMG_0648.MOV",
-  "IMG_0657.JPEG",
-  "IMG_0661.JPG",
-  "IMG_0699.JPEG",
-  "IMG_0699.MOV",
-  "IMG_0841.JPEG",
-  "IMG_0856.JPEG",
-  "IMG_7872.JPEG",
-  "IMG_7872.MOV",
-  "IMG_7900.JPEG",
-  "IMG_7900.MOV",
-  "IMG_8002.JPEG",
-  "IMG_8002.MOV",
-  "IMG_8018.JPEG",
-  "IMG_8018.MOV",
-  "IMG_8038.JPEG",
-  "IMG_8038.MOV",
-  "IMG_8200.JPEG",
-  "IMG_8230.JPEG",
-  "IMG_8373.JPEG",
-  "IMG_8399.JPEG",
-  "IMG_8441.JPEG",
-  "IMG_9012.jpeg",
-  "IMG_9025.JPEG",
-  "IMG_9046.JPEG",
-  "IMG_9059.JPEG",
-  "IMG_9078.JPEG",
-  "IMG_9094.JPG",
-  "IMG_9156.JPEG",
-  "IMG_9282.JPEG",
-  "IMG_9285.JPEG",
-  "IMG_9291.JPEG",
-  "IMG_9376.JPEG",
-];
-
-const highlightMediaFilenamesForStories = highlightMediaFilenames.filter(
-  (filename) => filename.split(".").pop()?.toLowerCase() !== "mov"
-);
-
-const instagramHighlightCategories = [
-  { id: "h1", label: "🎥" },
-  { id: "h2", label: "📹" },
-  { id: "h3", label: "📷" },
-  { id: "h4", label: "🔵🔴" },
-  { id: "h5", label: "✨" },
-];
-
-function toHighlightStoryType(filename: string): InstagramHighlightStory["type"] {
-  const ext = filename.split(".").pop()?.toLowerCase();
-  if (ext === "mp4" || ext === "webm") return "video";
-  return "image";
-}
-
-const instagramHighlights: InstagramHighlight[] = instagramHighlightCategories.map((category, categoryIndex) => {
-  const assigned = highlightMediaFilenamesForStories.filter(
-    (_, idx) => idx % instagramHighlightCategories.length === categoryIndex
-  );
-  const stories: InstagramHighlightStory[] = assigned.map((filename, idx) => {
-    const type = toHighlightStoryType(filename);
-    const story: InstagramHighlightStory = {
-      id: `${category.id}-${idx + 1}`,
-      type,
-      src: `/highlights/${filename}`,
-    };
-    if (type === "image") story.durationMs = 4500;
-    return story;
-  });
-
-  return {
-    id: category.id,
-    label: category.label,
-    coverUrl: stories[0]?.src,
-    stories,
-  };
-});
 
 function parseTimeToSeconds(value: string): number | null {
   const trimmed = value.trim();
@@ -272,9 +163,6 @@ function toEmbedUrl(rawUrl: string): string {
 function App() {
   const [heroTextHover, setHeroTextHover] = useState(false);
   const [activePost, setActivePost] = useState<InstagramPost | null>(null);
-  const [activeHighlight, setActiveHighlight] = useState<InstagramHighlight | null>(null);
-  const [activeStoryIndex, setActiveStoryIndex] = useState(0);
-  const [storyDirection, setStoryDirection] = useState<1 | -1>(1);
   const [snapEnabled, setSnapEnabled] = useState(true);
   const instagramRef = useRef<HTMLElement | null>(null);
 
@@ -303,42 +191,18 @@ function App() {
   }, [activePost]);
 
   useEffect(() => {
-    if (!activeHighlight) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setActiveHighlight(null);
-      if (e.key === "ArrowRight") {
-        setStoryDirection(1);
-        setActiveStoryIndex((v) => {
-          const next = v + 1;
-          if (next >= activeHighlight.stories.length) {
-            setActiveHighlight(null);
-            return v;
-          }
-          return next;
-        });
-      }
-      if (e.key === "ArrowLeft") {
-        setStoryDirection(-1);
-        setActiveStoryIndex((v) => Math.max(v - 1, 0));
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeHighlight]);
-
-  useEffect(() => {
     const html = document.documentElement;
-    const shouldSnap = snapEnabled && !activePost && !activeHighlight;
+    const shouldSnap = snapEnabled && !activePost;
     if (shouldSnap) html.dataset.scrollSnap = "on";
     else delete html.dataset.scrollSnap;
     return () => {
       delete html.dataset.scrollSnap;
     };
-  }, [activeHighlight, activePost, snapEnabled]);
+  }, [activePost, snapEnabled]);
 
   useEffect(() => {
     const body = document.body;
-    const isModalOpen = Boolean(activePost) || Boolean(activeHighlight);
+    const isModalOpen = Boolean(activePost);
     if (!isModalOpen) return;
 
     const scrollY = window.scrollY;
@@ -358,37 +222,7 @@ function App() {
       const restoreY = top ? Math.abs(parseInt(top, 10)) : 0;
       window.scrollTo(0, restoreY);
     };
-  }, [activeHighlight, activePost]);
-
-  const activeStories = useMemo<InstagramHighlightStory[]>(() => {
-    return activeHighlight?.stories ?? [];
-  }, [activeHighlight]);
-
-  const activeStoryDurationMs = useMemo(() => {
-    const story = activeStories[activeStoryIndex];
-    if (!story) return 4500;
-    if (typeof story.durationMs === "number") return Math.max(1000, story.durationMs);
-    return story.type === "image" ? 4500 : 8000;
-  }, [activeStories, activeStoryIndex]);
-
-  useEffect(() => {
-    if (!activeHighlight) return;
-    if (activeStoryIndex >= activeHighlight.stories.length) return;
-
-    const timer = window.setTimeout(() => {
-      setStoryDirection(1);
-      setActiveStoryIndex((v) => {
-        const next = v + 1;
-        if (next >= activeHighlight.stories.length) {
-          setActiveHighlight(null);
-          return v;
-        }
-        return next;
-      });
-    }, activeStoryDurationMs);
-
-    return () => window.clearTimeout(timer);
-  }, [activeHighlight, activeStoryDurationMs, activeStoryIndex]);
+  }, [activePost]);
 
   return (
     <>
@@ -408,6 +242,8 @@ function App() {
             <VisibilityVideo
               src={section.video}
               priority={section.type === "hero"}
+              threshold={0.15}
+              rootMargin="40% 0px"
               className="w-full h-full object-cover"
             />
           </div>
@@ -479,20 +315,14 @@ function App() {
         <InstagramProfileSection
           ref={instagramRef}
           avatarUrl="/perfil.jpg"
-          username="pherbera24"
+          username="Pau Herbera"
           displayName="Pau Herbera"
-          bio="Mañana lo dejo, enserio."
+          bio="Realizador y Operador Freelance con experiencia en grandes formatos y ficción. Especialista en tecnología de streaming (vMix), operación de cámara y soporte técnico en set"
           postsCount={instagramPosts.length}
-          followersCount={1097}
-          followingCount={507}
-          highlights={instagramHighlights}
+          followersCount={9999}
+          followingCount={9999}
           posts={instagramPosts}
           onOpenPost={(post) => setActivePost(post)}
-          onOpenHighlight={(highlight) => {
-            setActiveHighlight(highlight);
-            setActiveStoryIndex(0);
-            setStoryDirection(1);
-          }}
         />
 
       {/* Contact Section */}
@@ -518,14 +348,6 @@ function App() {
                 >
                   <Mail className="w-8 h-8 md:w-10 md:h-10" />
                   pauherbera@gmail.com
-                </a>
-
-                <a 
-                  href="tel:+34674620288"
-                  className="text-2xl md:text-4xl font-light tracking-wider hover:text-neutral-400 transition-colors flex items-center gap-4"
-                >
-                  <Phone className="w-8 h-8 md:w-10 md:h-10" />
-                  +34 674 62 02 88
                 </a>
               </div>
 
@@ -610,126 +432,6 @@ function App() {
         ) : null}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {activeHighlight ? (
-          <motion.div
-            key="highlight-modal"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black"
-          >
-            <div className="absolute left-0 right-0 top-0 z-20 px-3 pt-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <div className="text-sm font-semibold text-white">{activeHighlight.label}</div>
-                  <div className="text-xs text-white/60">Destacadas</div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveHighlight(null)}
-                  className="rounded-lg p-2 text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
-                  aria-label="Cerrar"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="mt-3 flex gap-1">
-                {activeStories.map((s, i) => (
-                  <div key={s.id} className="h-1 flex-1 overflow-hidden rounded-full bg-white/20">
-                    {i < activeStoryIndex ? (
-                      <div className="h-full w-full bg-white" />
-                    ) : i === activeStoryIndex ? (
-                      <motion.div
-                        key={`${activeHighlight.id}-${activeStoryIndex}-${i}`}
-                        initial={{ width: "0%" }}
-                        animate={{ width: "100%" }}
-                        transition={{ duration: activeStoryDurationMs / 1000, ease: "linear" }}
-                        className="h-full bg-white"
-                      />
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative h-dvh w-full bg-black">
-              <AnimatePresence initial={false} custom={storyDirection}>
-                {activeStories[activeStoryIndex] ? (
-                  <motion.div
-                    key={activeStories[activeStoryIndex].id}
-                    custom={storyDirection}
-                    variants={storyVariants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute inset-0 grid place-items-center px-6 pb-10 pt-24"
-                  >
-                    <div className="aspect-[9/16] w-full max-w-[420px] overflow-hidden rounded-2xl bg-black shadow-2xl">
-                      {activeStories[activeStoryIndex].type === "video" ? (
-                        <video
-                          src={activeStories[activeStoryIndex].src}
-                          className="h-full w-full object-cover"
-                          autoPlay
-                          muted
-                          playsInline
-                          onEnded={() => {
-                            setStoryDirection(1);
-                            setActiveStoryIndex((v) => {
-                              const next = v + 1;
-                              if (next >= activeStories.length) {
-                                setActiveHighlight(null);
-                                return v;
-                              }
-                              return next;
-                            });
-                          }}
-                        />
-                      ) : (
-                        <img
-                          src={activeStories[activeStoryIndex].src}
-                          alt=""
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                          draggable={false}
-                        />
-                      )}
-                    </div>
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
-
-              <button
-                type="button"
-                className="absolute inset-y-0 left-0 w-1/2"
-                onClick={() => {
-                  setStoryDirection(-1);
-                  setActiveStoryIndex((v) => Math.max(v - 1, 0));
-                }}
-                aria-label="Historia anterior"
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 w-1/2"
-                onClick={() => {
-                  setStoryDirection(1);
-                  setActiveStoryIndex((v) => {
-                    const next = v + 1;
-                    if (next >= activeStories.length) {
-                      setActiveHighlight(null);
-                      return v;
-                    }
-                    return next;
-                  });
-                }}
-                aria-label="Historia siguiente"
-              />
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
     </>
   );
 }
