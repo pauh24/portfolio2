@@ -53,9 +53,3 @@
     scrollbar-width: none;
   }
 }
-
-#trae-badge-plugin,
-.trae-badge,
-.trae-browser-inspect-draggable {
-  display: none !important;
-}

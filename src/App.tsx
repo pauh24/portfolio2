@@ -165,6 +165,37 @@ function App() {
   const [activePost, setActivePost] = useState<InstagramPost | null>(null);
   const [snapEnabled, setSnapEnabled] = useState(true);
   const instagramRef = useRef<HTMLElement | null>(null);
+  const [useVideoBackgrounds, setUseVideoBackgrounds] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+
+    const update = () => {
+      const connection = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } })
+        .connection;
+      const effectiveType = connection?.effectiveType ?? "";
+      const slowNetwork =
+        connection?.saveData === true ||
+        effectiveType === "slow-2g" ||
+        effectiveType === "2g" ||
+        effectiveType === "3g";
+
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      setUseVideoBackgrounds(mediaQuery.matches && !slowNetwork && !prefersReducedMotion);
+    };
+
+    update();
+
+    const onChange = () => update();
+    mediaQuery.addEventListener("change", onChange);
+
+    return () => {
+      mediaQuery.removeEventListener("change", onChange);
+    };
+  }, []);
 
   useEffect(() => {
     const target = instagramRef.current;
@@ -235,17 +266,19 @@ function App() {
           >
           {/* Background Video */}
           <div className="absolute inset-0 z-0">
-            {/* Gradient Overlay for Text Readability - Less intrusive */}
             <div className="absolute inset-0 bg-black/20 z-10" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 z-10" />
-            
-            <VisibilityVideo
-              src={section.video}
-              priority={section.type === "hero"}
-              threshold={0.15}
-              rootMargin="40% 0px"
-              className="w-full h-full object-cover"
-            />
+            {useVideoBackgrounds ? (
+              <VisibilityVideo
+                src={section.video}
+                priority={section.type === "hero"}
+                threshold={0.15}
+                rootMargin="40% 0px"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full bg-gradient-to-b from-black via-neutral-950 to-black" />
+            )}
           </div>
 
           {/* Content */}
